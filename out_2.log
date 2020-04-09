@@ -1,0 +1,53 @@
+Begin script: run_optmThrGFA.R
+2020-04-08 15:56:57
+
+Attaching package: ‘gplots’
+
+The following object is masked from ‘package:stats’:
+
+    lowess
+
+Loading required package: usethis
+Skipping install of 'optmThrGFA' from a github remote, the SHA1 (6a5dd3e0) has not changed since last install.
+  Use `force = TRUE` to force installation
+
+method 2
+
+Loading replicate 1 of 10
+Loading replicate 2 of 10
+Loading replicate 3 of 10
+Loading replicate 4 of 10
+Loading replicate 5 of 10
+Loading replicate 6 of 10
+Loading replicate 7 of 10
+Loading replicate 8 of 10
+Loading replicate 9 of 10
+Loading replicate 10 of 10
+
+All replicates loaded.
+
+
+Loading original dataset.
+Original dataset loaded.
+
+
+Creating GFA list.
+running replicate 1 of 10
+running replicate 2 of 10
+running replicate 3 of 10
+running replicate 4 of 10
+running replicate 5 of 10
+running replicate 6 of 10
+running replicate 7 of 10
+running replicate 8 of 10
+running replicate 9 of 10
+running replicate 10 of 10
+GFA list created.
+
+Creating xw_by_rep_comp.
+xw_by_rep_comp created.
+[1] "2020-04-08 16:04:23 :  1 , 1"
+Error in which(sapply(comps[[rep]], function(x) { : 
+  argument to 'which' is not logical
+Calls: source ... withVisible -> eval -> eval -> MSE.Grids -> matchFactors -> which
+Execution halted

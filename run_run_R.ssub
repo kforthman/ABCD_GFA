@@ -1,0 +1,28 @@
+#!/bin/bash
+#
+#SBATCH --partition=c2_short
+#SBATCH --ntasks=5
+#SBATCH --mem=10000
+#SBATCH --nodes=1
+#SBATCH --output=/media/t1000/Analysis/kforthman/ABCD_GFA/out_1.log
+#SBATCH --error=/media/t1000/Analysis/kforthman/ABCD_GFA/err_1.log
+#SBATCH --job-name=GFA
+#SBATCH --mail-type=NONE
+#SBATCH --workdir=/media/t1000/Analysis/kforthman/ABCD_GFA
+#SBATCH --time=0-2
+#
+#################################################
+#to submit this to the scheduler, run:
+#sbatch < run_run_R.ssub
+
+
+#to run an interactive terminal
+#srun -N 1 -c 4 --mem=24000 --pty --partition=c2_short /bin/bash
+
+module load R/3.5.1
+module load pandoc
+#this should go in your .bashrc file too, so R libraries installed for this version of R go in their own folder
+R_LIBS_USER=~/R/3.5.1
+export R_LIBS_USER
+
+./xvfb-run-safe -s '-br -extension Composite -screen 0 1000x1000x24' ./run_R.Rscript 

@@ -1,0 +1,18 @@
+Begin script: run_optmThrGFA.R
+2020-04-07 14:06:07
+
+Attaching package: ‘gplots’
+
+The following object is masked from ‘package:stats’:
+
+    lowess
+
+Loading required package: usethis
+Skipping install of 'optmThrGFA' from a github remote, the SHA1 (5e0af50f) has not changed since last install.
+  Use `force = TRUE` to force installation
+
+method 1
+
+Error in match_orig$mse$all : $ operator is invalid for atomic vectors
+Calls: source -> withVisible -> eval -> eval -> optimizeK
+Execution halted

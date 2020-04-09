@@ -1,0 +1,4 @@
+#!/opt/apps/core/R/3.5.1/lib64/R/bin/Rscript
+
+source('run_optmThrGFA-mthd2.R')
+
