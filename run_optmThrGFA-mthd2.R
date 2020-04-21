@@ -24,6 +24,7 @@ library(knitr)
 library(gplots)
 library(ggplot2)
 library(foreach)
+library(DMwR)
 
 ## Load optmThrGFA
 library(devtools)
@@ -52,16 +53,10 @@ load(paste0(data_dir, "nda18_2.01_COG_CBCL_SOC_SMAdata.RData"))
 message("Original dataset loaded.\n")
 
 Y <- as.matrix(MYdf)
+if(sum(is.na(Y)) > 0){
+  Y_imp <- knnImputation(Y)
+}
 Y_grouped <- list()
-
-
-# ---- Overwrite  settings ---
-# Indicate if you would like to overwrite files if they already exist
-overwrite_rep <- T
-overwrite_match <- T
-overwrite_gfaList <- T
-overwrite_xw <- T
-
 
 # ---- Setting up the blocks ----  
 # Labels for different variable sets:
@@ -80,14 +75,27 @@ smalabels <- c('fes_ss_fc_p', 'fes_y_ss_fc', 'crpbi_ss_studycaregiver', 'crpbi_y
                'prosocial_ss_mean_p', 'prosocial_ss_mean_y', 'pmq_y_ss_mean')
 
 soclabels  <- c('screentime_wkdy_1', 'screentime_wkdy_2', 'screentime_wkdy_3', 'screentime_wkdy_4', 
-               'screentime_wkdy_5', 'screentime_wkdy_6', 'screentime_wknd_7', 'screentime_wknd_8', 
-               'screentime_wknd_9', 'screentime_wknd_10', 'screentime_wknd_11', 'screentime_wknd_12')
+                'screentime_wkdy_5', 'screentime_wkdy_6', 'screentime_wknd_7', 'screentime_wknd_8', 
+                'screentime_wknd_9', 'screentime_wknd_10', 'screentime_wknd_11', 'screentime_wknd_12')
 
 Y_grouped$cbc <- Y[,cbclabels]
 Y_grouped$cog <- Y[,coglabels]
 Y_grouped$sma <- Y[,smalabels]
 Y_grouped$soc <- Y[,soclabels]
 
+
+mynorm <- normalizeData(Y_grouped, type="scaleFeatures")
+Y_norm <- mynorm$train
+Y_norm_bound <- do.call(cbind, Y_norm)
+
+startK <- dim(Y)[2]
+
+# ---- Overwrite  settings ---
+# Indicate if you would like to overwrite files if they already exist
+overwrite_rep <- F
+overwrite_match <- F
+overwrite_gfaList <- F
+overwrite_xw <- F
 
 # ---- Create and load replicates ---- 
 
@@ -100,7 +108,7 @@ foreach(r = 1:R, .packages=c("GFA")) %dopar% {
   if(!file.exists(this.filename) | overwrite_rep){
     message(paste0("Creating replicate ", r, " of ", R))
     set.seed(r)
-    res <- gfa(Y_grouped, opts=opts, K=40)
+    res <- gfa(Y_norm, opts=opts, K=startK)
     save(res, file = this.filename)
     remove(res)
   }
@@ -119,11 +127,18 @@ for(r in 1:R){
   gfaList_full[[r]] <- res
   rep.summ$conv[r] <- res$conv
   rep.summ$K[r] <- res$K
+  message(rep.summ$K[r])
 }
 remove(res)
 
 message("\nAll replicates loaded.\n")
 
+
+for(r in 1:R){
+  message(paste0("Loading replicate ", r, " of ", R))
+  load(paste0(data_dir, "GFA_rep_", r, ".rda"))
+  message(res$K)
+}
 
 # ---- Analysis ---- 
 
@@ -176,7 +191,7 @@ if(!file.exists(match.filename) || overwrite_match){
   
   # 3. Run MSE.Grids
   match.mse <- MSE.Grids(
-    Ymtx=Y,                       ## the observed (normalized) data matrix (N x D)
+    Ymtx=Y_norm_bound,                  ## the observed (normalized) data matrix (N x D)
     maxK = max(rep.summ$K),       ## the maximal K among the GFA replicates
     comps=xw,                     ## a list of GFA replicates with posterior medians
     corGrids=corGrids,            ## the grids of corThr values to be assessed
@@ -188,16 +203,19 @@ if(!file.exists(match.filename) || overwrite_match){
 }
 
 # ---- Print the results ---- 
-
+tmp.filename <- paste0(folder, "opt.par.rda")
 opt.par <- optimizeK(K.grids=match.mse$K.grid, mse.array=match.mse$mse$all)
 message(paste0("The min. MSE = ", round(opt.par$mse.min, 3)))
 message(paste0("The 1-SE MSE threshold = ", round(opt.par$mseThr, 3)))
 message(paste0("min. MSE criterion gives ", opt.par$Krobust.min, " matched factors"))
 message(paste0("1-SE MSE criterion gives ", opt.par$Krobust.1se, " matched factors"))
+save(opt.par, file = tmp.filename)
 
 tmp.filename <- paste0(folder, "tmp.rda")
 tmp <- match.mse$K.grids
+message(tmp)
 tmp[opt.par$mse.m > opt.par$mseThr | tmp != opt.par$Krobust.1se] <- NA
+message(tmp)
 save(tmp, file = tmp.filename)
 
 message("Done.")

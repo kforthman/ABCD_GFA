@@ -3,3 +3,9 @@ data
 res
 
 .DS_Store
+
+err*
+
+out*
+
+nda18_2.01_generalGFA.R
