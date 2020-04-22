@@ -4,8 +4,8 @@
 #SBATCH --ntasks=1
 #SBATCH --mem=10000
 #SBATCH --nodes=1
-#SBATCH --output=/media/t1000/Analysis/kforthman/ABCD_GFA/out_2.log
-#SBATCH --error=/media/t1000/Analysis/kforthman/ABCD_GFA/err_2.log
+#SBATCH --output=/media/t1000/Analysis/kforthman/ABCD_GFA/out.log
+#SBATCH --error=/media/t1000/Analysis/kforthman/ABCD_GFA/err.log
 #SBATCH --job-name=GFA
 #SBATCH --mail-type=NONE
 #SBATCH --workdir=/media/t1000/Analysis/kforthman/ABCD_GFA
@@ -13,7 +13,7 @@
 #
 #################################################
 #to submit this to the scheduler, run:
-#sbatch < run_run_R-mthd2.ssub
+#sbatch < run_run_R.ssub
 
 
 #to run an interactive terminal
@@ -25,4 +25,4 @@ module load pandoc
 R_LIBS_USER=~/R/3.5.1
 export R_LIBS_USER
 
-./xvfb-run-safe -s '-br -extension Composite -screen 0 1000x1000x24' ./run_R-mthd2.Rscript 
+./xvfb-run-safe -s '-br -extension Composite -screen 0 1000x1000x24' ./run_R.Rscript 

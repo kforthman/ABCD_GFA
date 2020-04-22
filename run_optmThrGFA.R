@@ -38,11 +38,9 @@ opts$convergenceCheck <- T
 
 
 # ---- Set file paths ----
-mthd <- "2"
-message(paste0("\nmethod ", mthd, "\n"))
-folder <- paste0("res/mthd", mthd,"/")
+folder <- paste0("res/")
 data_dir <- "data/"
-match.filename <- paste0(folder, "match_orig_mthd", mthd,".rda")
+match.filename <- paste0(folder, "match_orig.rda")
 
 
 # ---- Load raw data ----
