@@ -38,16 +38,18 @@ opts$convergenceCheck <- T
 
 
 # ---- Set file paths ----
-folder <- paste0("res/")
-data_dir <- "data/"
-match.filename <- paste0(folder, "match_orig.rda")
+folder <- "res" # The folder where you want to put the results
+if(!file.exists(folder)){dir.create(folder)} # Will create the results folder if it does not exist
+data_dir <- "data" # The folder that contains your raw data
+match.filename <- paste0(folder, "/match_orig.rda")
 
 
 # ---- Load raw data ----
-# Raw data should be a matrix with a row for each observation/participant,
+# Raw data should be a matrix or data frame with a row 
+# for each observation/participant,
 # and a column for each variable
 message("\nLoading original dataset.")
-load(paste0(data_dir, "nda18_2.01_COG_CBCL_SOC_SMAdata.RData"))
+load(paste0(data_dir, "/nda18_2.01_COG_CBCL_SOC_SMAdata.RData"))
 message("Original dataset loaded.\n")
 
 Y <- as.matrix(MYdf)
@@ -81,28 +83,32 @@ Y_grouped$cog <- Y[,coglabels]
 Y_grouped$sma <- Y[,smalabels]
 Y_grouped$soc <- Y[,soclabels]
 
-
+# Normalize the data
 mynorm <- normalizeData(Y_grouped, type="scaleFeatures")
-Y_norm <- mynorm$train
-Y_norm_bound <- do.call(cbind, Y_norm)
+Y_norm <- mynorm$train # pull out the normalized data
+Y_norm_bound <- do.call(cbind, Y_norm) # bind the groups into matrix
 
+# Set the default K (the initial guess to the number of factors) 
+# to the number of variables in the dataset.
 startK <- dim(Y)[2]
 
 # ---- Overwrite  settings ---
-# Indicate if you would like to overwrite files if they already exist
-overwrite_rep <- F
-overwrite_match <- F
-overwrite_gfaList <- F
-overwrite_xw <- F
+# Indicate if you would like to overwrite files if they already exist.
+# This is useful for testing, if you made a mistake and need to
+# re-run a step in the process.
+overwrite_rep <- T
+overwrite_gfaList <- T
+overwrite_xw <- T
+overwrite_match <- T
 
 # ---- Create and load replicates ---- 
 
-# Number of replicates
+# Number of GFA replicates
 R <- 10
 
 # Writes output from gfa function to a .rda file.
 foreach(r = 1:R, .packages=c("GFA")) %dopar% {
-  this.filename <- paste0(data_dir, "GFA_rep_", r, ".rda")
+  this.filename <- paste0(data_dir, "/GFA_rep_", r, ".rda")
   if(!file.exists(this.filename) | overwrite_rep){
     message(paste0("Creating replicate ", r, " of ", R))
     set.seed(r)
@@ -121,7 +127,7 @@ rep.summ <- data.frame(Replicate=1:R, conv=rep(NA, R), K=rep(NA, R))
 gfaList_full <- list()
 for(r in 1:R){
   message(paste0("Loading replicate ", r, " of ", R))
-  load(paste0(data_dir, "GFA_rep_", r, ".rda"))
+  load(paste0(data_dir, "/GFA_rep_", r, ".rda"))
   gfaList_full[[r]] <- res
   rep.summ$conv[r] <- res$conv
   rep.summ$K[r] <- res$K
@@ -132,16 +138,10 @@ remove(res)
 message("\nAll replicates loaded.\n")
 
 
-for(r in 1:R){
-  message(paste0("Loading replicate ", r, " of ", R))
-  load(paste0(data_dir, "GFA_rep_", r, ".rda"))
-  message(res$K)
-}
-
 # ---- Analysis ---- 
 
 # gfaList
-gfaList.filename <- paste0(folder, "gfaList_p50.rda")
+gfaList.filename <- paste0(folder, "/gfaList_p50.rda")
 if(!file.exists(gfaList.filename) | overwrite_gfaList){
   message("\nCreating GFA list.")
   gfaList_p50 <- list()
@@ -158,7 +158,7 @@ if(!file.exists(gfaList.filename) | overwrite_gfaList){
 }
 
 # xw
-xw_by_rep_comp.filename <- paste0(folder, "xw_by_rep_comp.rda")
+xw_by_rep_comp.filename <- paste0(folder, "/xw_by_rep_comp.rda")
 if(!file.exists(xw_by_rep_comp.filename) | overwrite_xw){
   message("\nCreating xw_by_rep_comp.")
   xw <- list()
@@ -189,7 +189,7 @@ if(!file.exists(match.filename) || overwrite_match){
   
   # 3. Run MSE.Grids
   match.mse <- MSE.Grids(
-    Ymtx=Y_norm_bound,                  ## the observed (normalized) data matrix (N x D)
+    Ymtx=Y_norm_bound,            ## the observed (normalized) data matrix (N x D)
     maxK = max(rep.summ$K),       ## the maximal K among the GFA replicates
     comps=xw,                     ## a list of GFA replicates with posterior medians
     corGrids=corGrids,            ## the grids of corThr values to be assessed
@@ -201,7 +201,7 @@ if(!file.exists(match.filename) || overwrite_match){
 }
 
 # ---- Print the results ---- 
-tmp.filename <- paste0(folder, "opt.par.rda")
+tmp.filename <- paste0(folder, "/opt.par.rda")
 opt.par <- optimizeK(K.grids=match.mse$K.grid, mse.array=match.mse$mse$all)
 message(paste0("The min. MSE = ", round(opt.par$mse.min, 3)))
 message(paste0("The 1-SE MSE threshold = ", round(opt.par$mseThr, 3)))
@@ -209,12 +209,14 @@ message(paste0("min. MSE criterion gives ", opt.par$Krobust.min, " matched facto
 message(paste0("1-SE MSE criterion gives ", opt.par$Krobust.1se, " matched factors"))
 save(opt.par, file = tmp.filename)
 
-tmp.filename <- paste0(folder, "tmp.rda")
-tmp <- match.mse$K.grids
-message(tmp)
-tmp[opt.par$mse.m > opt.par$mseThr | tmp != opt.par$Krobust.1se] <- NA
-message(tmp)
-save(tmp, file = tmp.filename)
+Kgrids.filename <- paste0(folder, "/Kgrids.rda")
+Kgrids <- match.mse$K.grids
+save(Kgrids, file = Kgrids.filename)
+
+optParams.filename <- paste0(folder, "/optParams.rda")
+optParams <- Kgrids
+optParams[opt.par$mse.m > opt.par$mseThr | Kgrids != opt.par$Krobust.1se] <- NA
+save(optParams, file = optParams.filename)
 
 message("Done.")
 message(Sys.time())
