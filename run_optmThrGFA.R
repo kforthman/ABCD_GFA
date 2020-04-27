@@ -1,7 +1,6 @@
 message("Begin script: run_optmThrGFA.R")
 message(Sys.time())
 
-
 # ---- Set working directory ----
 
 # I recommend running this script on the server, but
@@ -54,7 +53,7 @@ message("Original dataset loaded.\n")
 
 Y <- as.matrix(MYdf)
 if(sum(is.na(Y)) > 0){
-  Y_imp <- knnImputation(Y)
+  Y <- knnImputation(Y)
 }
 Y_grouped <- list()
 
@@ -96,10 +95,10 @@ startK <- dim(Y)[2]
 # Indicate if you would like to overwrite files if they already exist.
 # This is useful for testing, if you made a mistake and need to
 # re-run a step in the process.
-overwrite_rep <- T
-overwrite_gfaList <- T
-overwrite_xw <- T
-overwrite_match <- T
+overwrite_rep <- F
+overwrite_gfaList <- F
+overwrite_xw <- F
+overwrite_match <- F
 
 # ---- Create and load replicates ---- 
 
