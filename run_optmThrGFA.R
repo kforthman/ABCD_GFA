@@ -106,7 +106,7 @@ overwrite_match <- F
 R <- 10
 
 # Writes output from gfa function to a .rda file.
-foreach(r = 1:R, .packages=c("GFA")) %dopar% {
+for(r in 1:R){
   this.filename <- paste0(data_dir, "/GFA_rep_", r, ".rda")
   if(!file.exists(this.filename) | overwrite_rep){
     message(paste0("Creating replicate ", r, " of ", R))
@@ -130,7 +130,7 @@ for(r in 1:R){
   gfaList_full[[r]] <- res
   rep.summ$conv[r] <- res$conv
   rep.summ$K[r] <- res$K
-  message(rep.summ$K[r])
+  message(paste0("Replicate ", r, " has ", rep.summ$K[r], " factors."))
 }
 remove(res)
 
