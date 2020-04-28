@@ -219,5 +219,21 @@ optParams <- Kgrids
 optParams[opt.par$mse.m > opt.par$mseThr | Kgrids != opt.par$Krobust.1se] <- NA
 save(optParams, file = optParams.filename)
 
+# ---- Robust Components ----
+
+rcomp.filename <- paste0(folder, "/rcomp.rda")
+if(!file.exists(rcomp.filename)){
+rcomp <- robustComponents(gfaList_full, 
+                          corThr=opt.par$par.1se[1, "opt.corThr"], 
+                          matchThr=opt.par$par.1se[1, "opt.matchThr"]
+                          )
+save(rcomp, file = rcomp.filename)
+}else{
+  load(rcomp.filename)
+}
+
+
+
+
 message("Done.")
 message(Sys.time())
