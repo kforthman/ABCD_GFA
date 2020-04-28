@@ -70,17 +70,17 @@ coglabels <- c('nihtbx_picvocab_agecorrected', 'nihtbx_flanker_agecorrected', 'n
                'nihtbx_totalcomp_agecorrected', 'pea_ravlt_sd_trial_vi_tc', 'pea_ravlt_ld_trial_vii_tc', 
                'pea_wiscv_tss')
 
-smalabels <- c('fes_ss_fc_p', 'fes_y_ss_fc', 'crpbi_ss_studycaregiver', 'crpbi_y_ss_caregiver', 
+soclabels <- c('fes_ss_fc_p', 'fes_y_ss_fc', 'crpbi_ss_studycaregiver', 'crpbi_y_ss_caregiver', 
                'prosocial_ss_mean_p', 'prosocial_ss_mean_y', 'pmq_y_ss_mean')
 
-soclabels  <- c('screentime_wkdy_1', 'screentime_wkdy_2', 'screentime_wkdy_3', 'screentime_wkdy_4', 
+smalabels  <- c('screentime_wkdy_1', 'screentime_wkdy_2', 'screentime_wkdy_3', 'screentime_wkdy_4', 
                 'screentime_wkdy_5', 'screentime_wkdy_6', 'screentime_wknd_7', 'screentime_wknd_8', 
                 'screentime_wknd_9', 'screentime_wknd_10', 'screentime_wknd_11', 'screentime_wknd_12')
 
 Y_grouped$cbc <- Y[,cbclabels]
 Y_grouped$cog <- Y[,coglabels]
-Y_grouped$sma <- Y[,smalabels]
 Y_grouped$soc <- Y[,soclabels]
+Y_grouped$sma <- Y[,smalabels]
 
 # Normalize the data
 mynorm <- normalizeData(Y_grouped, type="scaleFeatures")
