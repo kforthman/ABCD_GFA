@@ -34,6 +34,8 @@ library(optmThrGFA)
 # ---- Set GFA Options ----
 opts <- getDefaultOpts()
 opts$convergenceCheck <- T
+# opts$verbose <- 0 # Set to 0 if you do not 
+# want to print results of each gfa replicate
 
 
 # ---- Set file paths ----
