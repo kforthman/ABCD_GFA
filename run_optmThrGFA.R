@@ -89,6 +89,27 @@ mynorm <- normalizeData(Y_grouped, type="scaleFeatures")
 Y_norm <- mynorm$train # pull out the normalized data
 Y_norm_bound <- do.call(cbind, Y_norm) # bind the groups into matrix
 
+
+block.names <- c("cbc", "cog", "soc", "sma")
+varIdx.by.block <- list(which(is.element(colnames(Y_norm_bound), cbclabels)),
+                        which(is.element(colnames(Y_norm_bound), coglabels)),
+                        which(is.element(colnames(Y_norm_bound), soclabels)),
+                        which(is.element(colnames(Y_norm_bound), smalabels)))
+
+block.length <- unlist(lapply(varIdx.by.block, length))
+n.blocks <- length(block.length)
+
+block4vars <-unlist(
+  lapply(1:n.blocks, function(x){
+    rep(block.names[x], block.length[x])
+  }))
+
+allvarlabs <- c(cbclabels, coglabels, soclabels, smalabels)
+
+save(block.names, file = paste0(folder, "/block.names.rda"))
+save(varIdx.by.block, file = paste0(folder, "/varIdx.by.block.rda"))
+save(block4vars, file = paste0(folder, "/block4vars.rda"))
+
 # Set the default K (the initial guess to the number of factors) 
 # to the number of variables in the dataset.
 startK <- dim(Y)[2]
@@ -177,17 +198,15 @@ if(!file.exists(xw_by_rep_comp.filename) | overwrite_xw){
   message("xw_by_rep_comp loaded.")
 }
 
+# corGrids and matchGrids are the threshold parameters.
+# corThr: How close two components are required to be, 
+# in terms of correlation, in order to match them.
+corGrids   <- c(seq(0.1, 0.5, by=0.2), seq(0.6, 0.9, 0.1))
+# matchThr: The proportion of sampling chains that need to contain a component 
+# in order to include it in the robust components.
+matchGrids <- c(seq(0.1, 0.5, by=0.2), seq(0.6, 0.9, 0.1))
 
 if(!file.exists(match.filename) || overwrite_match){
-  
-  # corGrids and matchGrids are the threshold parameters.
-  # corThr: How close two components are required to be, 
-  # in terms of correlation, in order to match them.
-  corGrids   <- c(seq(0.1, 0.5, by=0.2), seq(0.6, 0.9, 0.1))
-  # matchThr: The proportion of sampling chains that need to contain a component 
-  # in order to include it in the robust components.
-  matchGrids <- c(seq(0.1, 0.5, by=0.2), seq(0.6, 0.9, 0.1))
-  
   # 3. Run MSE.Grids
   match.mse <- MSE.Grids(
     Ymtx=Y_norm_bound,            ## the observed (normalized) data matrix (N x D)
@@ -203,35 +222,74 @@ if(!file.exists(match.filename) || overwrite_match){
 
 # ---- Print the results ---- 
 tmp.filename <- paste0(folder, "/opt.par.rda")
+message(tmp.filename)
 opt.par <- optimizeK(K.grids=match.mse$K.grid, mse.array=match.mse$mse$all)
-message(paste0("The min. MSE = ", round(opt.par$mse.min, 3)))
-message(paste0("The 1-SE MSE threshold = ", round(opt.par$mseThr, 3)))
-message(paste0("min. MSE criterion gives ", opt.par$Krobust.min, " matched factors"))
-message(paste0("1-SE MSE criterion gives ", opt.par$Krobust.1se, " matched factors"))
 save(opt.par, file = tmp.filename)
 
+opt.cor <- opt.par$par.1se[1, "opt.corThr"]
+opt.match <- opt.par$par.1se[1, "opt.matchThr"]
+opt.K <- opt.par$par.1se[1, "optK"]
+opt.cor.idx <- which(corGrids == opt.cor)
+opt.match.idx <- which(matchGrids == opt.match)
+
 Kgrids.filename <- paste0(folder, "/Kgrids.rda")
+message(Kgrids.filename)
 Kgrids <- match.mse$K.grids
 save(Kgrids, file = Kgrids.filename)
 
 optParams.filename <- paste0(folder, "/optParams.rda")
+message(optParams.filename)
 optParams <- Kgrids
 optParams[opt.par$mse.m > opt.par$mseThr | Kgrids != opt.par$Krobust.1se] <- NA
 save(optParams, file = optParams.filename)
 
+rep.fac.effects.filename <- paste0(folder, "/rep.fac.effects.rda")
+message(rep.fac.effects.filename)
+rep.fac.effects <- expand.grid(Rep=1:10, k=1:opt.K)
+for(r in 1:R){
+  for(k in 1:opt.K){
+    x1 <- as.vector(gfaList_p50[[r]]$Yhat.p50[[k]])
+    x2 <- as.vector(Y_norm_bound)
+    rep.fac.effects$rmse[rep.fac.effects$Rep==r & rep.fac.effects$k==k] <- sqrt(mean((x1 - x2)^2))
+    rep.fac.effects$cor[rep.fac.effects$Rep==r & rep.fac.effects$k==k] <- cor(x1, x2)
+  }
+}
+rep.fac.effects$Rep <- as.factor(rep.fac.effects$Rep)
+rep.fac.effects$k <- as.factor(rep.fac.effects$k)
+save(rep.fac.effects, file = rep.fac.effects.filename)
+
+varexp.filename <- paste0(folder, "/varexp.rda")
+message(varexp.filename)
+
+rob.ind <- list(indices=match.mse$indices[[opt.cor.idx]][[opt.match.idx]])
+varexp <- rob.var.exp(models=gfaList_p50,
+                      indices=rob.ind,
+                      block.names=block.names,
+                      varIdx.by.block=varIdx.by.block,
+                      use.unmatched=T,
+                      by.block=T)
+save(varexp, file = varexp.filename)
+
+robust.xw.filename <- paste0(folder, "/robust.xw.rda")
+message(robust.xw.filename)
+robust.xw <- rob_wx(models=gfaList_p50, indices=varexp$indices, block.labs=block4vars, var.labs=allvarlabs)
+save(robust.xw, file=robust.xw.filename)
 # ---- Robust Components ----
 
 rcomp.filename <- paste0(folder, "/rcomp.rda")
+message(rcomp.filename)
 if(!file.exists(rcomp.filename)){
-rcomp <- robustComponents(gfaList_full, 
-                          corThr=opt.par$par.1se[1, "opt.corThr"], 
-                          matchThr=opt.par$par.1se[1, "opt.matchThr"]
-                          )
-save(rcomp, file = rcomp.filename)
+  rcomp <- robustComponents(gfaList_full, 
+                            corThr=opt.par$par.1se[1, "opt.corThr"], 
+                            matchThr=opt.par$par.1se[1, "opt.matchThr"]
+  )
+  save(rcomp, file = rcomp.filename)
 }else{
   load(rcomp.filename)
 }
 
+message("Creating report.")
+rmarkdown::render("createReport.Rmd", output_file = "Report.pdf", clean = T)
 
 
 
