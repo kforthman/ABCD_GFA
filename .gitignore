@@ -4,6 +4,12 @@ res
 
 .DS_Store
 
+.Rhistory
+
+.Rprofile
+
+Rplots.pdf
+
 err*
 
 out*
@@ -16,3 +22,4 @@ res_groupMislabeled
 
 run_optmThrGFA_Martin.R
 
+packrat/lib*/

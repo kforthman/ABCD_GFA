@@ -60,14 +60,6 @@ optParams
 ```
 
 ```{r}
-rep.fac.effects.filename <- paste0(folder, "/rep.fac.effects.rda")
-load(rep.fac.effects.filename)
-summary(rep.fac.effects)
-
-kable(rep.fac.effects, digits=2)
-```
-
-```{r}
 varexp.filename <- paste0(folder, "/varexp.rda")
 load(varexp.filename)
 
@@ -104,13 +96,15 @@ load(paste0(folder, "/block.names.rda"))
 load(paste0(folder, "/varIdx.by.block.rda"))
 load(paste0(folder, "/block4vars.rda"))
 
+nfactor <- ncol(robust.xw$w.med)
+
 gfa_heatmap(
   robW = robust.xw,
   block.names=block.names,
   varIdx.by.block=varIdx.by.block,
   conf.level=0.95,
   heatmap.rep=F,
-  factor.order=1:35)
+  factor.order=1:nfactor)
 
 ```
 
@@ -120,7 +114,7 @@ mytitles <- paste0(GFAfactorlabels, varexp$ve.summ$Component, ': ', round(varexp
 w.summ <- robust.xw$w.ci.med
 names(w.summ)[names(w.summ)=="Block"] <- "GFAgroups"
 names(w.summ)[names(w.summ)=="var.lab"] <- "GFAvarlabs"
-for (f in 1:35){
+for (f in 1:nfactor){
   print(
     Circbar(mydata = w.summ[w.summ$Component==varexp$ve.summ$Component[f],], 
             ebar = 2, 

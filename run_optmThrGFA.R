@@ -243,21 +243,6 @@ optParams <- Kgrids
 optParams[opt.par$mse.m > opt.par$mseThr | Kgrids != opt.par$Krobust.1se] <- NA
 save(optParams, file = optParams.filename)
 
-rep.fac.effects.filename <- paste0(folder, "/rep.fac.effects.rda")
-message(rep.fac.effects.filename)
-rep.fac.effects <- expand.grid(Rep=1:10, k=1:opt.K)
-for(r in 1:R){
-  for(k in 1:opt.K){
-    x1 <- as.vector(gfaList_p50[[r]]$Yhat.p50[[k]])
-    x2 <- as.vector(Y_norm_bound)
-    rep.fac.effects$rmse[rep.fac.effects$Rep==r & rep.fac.effects$k==k] <- sqrt(mean((x1 - x2)^2))
-    rep.fac.effects$cor[rep.fac.effects$Rep==r & rep.fac.effects$k==k] <- cor(x1, x2)
-  }
-}
-rep.fac.effects$Rep <- as.factor(rep.fac.effects$Rep)
-rep.fac.effects$k <- as.factor(rep.fac.effects$k)
-save(rep.fac.effects, file = rep.fac.effects.filename)
-
 varexp.filename <- paste0(folder, "/varexp.rda")
 message(varexp.filename)
 
