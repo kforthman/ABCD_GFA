@@ -15,20 +15,16 @@ local.ed <- "/Volumes/T1000/Analysis/kforthman/ABCD_GFA" # The path to the
 if(Sys.info()["nodename"] == local.nodename){setwd(local.ed)}
 
 
-# ---- Load packages ----
-
-## Required packages
-library(GFA)
-library(knitr)
-library(gplots)
-library(ggplot2)
-library(foreach)
-library(DMwR)
-
 ## Load optmThrGFA
-library(devtools)
-install_github("kforthman/optmThrGFA")
+if(!("devtools" %in% row.names(installed.packages()))){install.packages("devtools")}
+if(!("rmarkdown" %in% row.names(installed.packages()))){install.packages("rmarkdown")}
+devtools::install_github("kforthman/optmThrGFA")
 library(optmThrGFA)
+
+# ---- Set up parallel computing ----
+detectCores()
+cl = 10; registerDoParallel(cl)
+getDoParWorkers()
 
 
 # ---- Set GFA Options ----
