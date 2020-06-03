@@ -1,5 +1,6 @@
+bgn_time <- Sys.time()
 message("Begin script: run_optmThrGFA.R")
-message(Sys.time())
+message(bgn_time)
 
 # ---- Set working directory ----
 
@@ -277,4 +278,6 @@ rmarkdown::render("createReport.Rmd", output_file = "Report.pdf", clean = T)
 
 
 message("Done.")
-message(Sys.time())
+end_time <- Sys.time()
+message(end_time)
+message(paste0("Script finished in ", round((end_time - bgn_time)/60, 3), " minutes."))
