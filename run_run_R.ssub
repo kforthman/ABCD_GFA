@@ -18,10 +18,12 @@
 #to run an interactive terminal
 #srun -N 1 -c 4 --mem=24000 --pty --partition=c2_short /bin/bash
 
-module load R/3.5.1
+#module load R/3.5.1
+module load R/4.0.0
 module load pandoc
 #this should go in your .bashrc file too, so R libraries installed for this version of R go in their own folder
-R_LIBS_USER=~/R/3.5.1
+#R_LIBS_USER=~/R/3.5.1
+R_LIBS_USER=~/R/ABCD_GFA
 export R_LIBS_USER
 
 ./xvfb-run-safe -s '-br -extension Composite -screen 0 1000x1000x24' ./run_R.Rscript 
