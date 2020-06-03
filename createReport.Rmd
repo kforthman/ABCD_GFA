@@ -30,7 +30,7 @@ opts$convergenceCheck <- T
 
 
 # ---- Set file paths ----
-folder <- "res_groupMislabeled" # The folder where you want to put the results
+folder <- "res" # The folder where you want to put the results
 if(!file.exists(folder)){dir.create(folder)} # Will create the results folder if it does not exist
 data_dir <- "data" # The folder that contains your raw data
 match.filename <- paste0(folder, "/match_orig.rda")
