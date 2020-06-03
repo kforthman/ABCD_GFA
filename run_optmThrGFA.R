@@ -53,32 +53,19 @@ Y <- as.matrix(MYdf)
 if(sum(is.na(Y)) > 0){
   Y <- knnImputation(Y)
 }
-Y_grouped <- list()
 
 # ---- Setting up the blocks ----  
-# Labels for different variable sets:
-cbclabels <- c('cbcl_scr_syn_anxdep_t', 'cbcl_scr_syn_withdep_t', 'cbcl_scr_syn_somatic_t', 
-               'cbcl_scr_syn_social_t', 'cbcl_scr_syn_thought_t', 'cbcl_scr_syn_attention_t', 
-               'cbcl_scr_syn_rulebreak_t', 'cbcl_scr_syn_aggressive_t', 'cbcl_scr_syn_internal_t',
-               'cbcl_scr_syn_external_t', 'cbcl_scr_syn_totprob_t')
 
-coglabels <- c('nihtbx_picvocab_agecorrected', 'nihtbx_flanker_agecorrected', 'nihtbx_list_agecorrected', 
-               'nihtbx_cardsort_agecorrected', 'nihtbx_pattern_agecorrected', 'nihtbx_picture_agecorrected', 
-               'nihtbx_reading_agecorrected', 'nihtbx_fluidcomp_agecorrected', 'nihtbx_cryst_agecorrected', 
-               'nihtbx_totalcomp_agecorrected', 'pea_ravlt_sd_trial_vi_tc', 'pea_ravlt_ld_trial_vii_tc', 
-               'pea_wiscv_tss')
+Y_grouped <- list()
 
-soclabels <- c('fes_ss_fc_p', 'fes_y_ss_fc', 'crpbi_ss_studycaregiver', 'crpbi_y_ss_caregiver', 
-               'prosocial_ss_mean_p', 'prosocial_ss_mean_y', 'pmq_y_ss_mean')
+var_blocks <- read.csv("var_blocks.csv", header = T)
+block.names <- unique(var_blocks$block)
 
-smalabels  <- c('screentime_wkdy_1', 'screentime_wkdy_2', 'screentime_wkdy_3', 'screentime_wkdy_4', 
-                'screentime_wkdy_5', 'screentime_wkdy_6', 'screentime_wknd_7', 'screentime_wknd_8', 
-                'screentime_wknd_9', 'screentime_wknd_10', 'screentime_wknd_11', 'screentime_wknd_12')
+for (k in block.names){
+  this_block_vars <- var_blocks[var_blocks$block == k, "variable"]
+  Y_grouped[[k]] <- Y[,this_block_vars]
+}
 
-Y_grouped$cbc <- Y[,cbclabels]
-Y_grouped$cog <- Y[,coglabels]
-Y_grouped$soc <- Y[,soclabels]
-Y_grouped$sma <- Y[,smalabels]
 
 # Normalize the data
 mynorm <- normalizeData(Y_grouped, type="scaleFeatures")
@@ -86,11 +73,12 @@ Y_norm <- mynorm$train # pull out the normalized data
 Y_norm_bound <- do.call(cbind, Y_norm) # bind the groups into matrix
 
 
-block.names <- c("cbc", "cog", "soc", "sma")
-varIdx.by.block <- list(which(is.element(colnames(Y_norm_bound), cbclabels)),
-                        which(is.element(colnames(Y_norm_bound), coglabels)),
-                        which(is.element(colnames(Y_norm_bound), soclabels)),
-                        which(is.element(colnames(Y_norm_bound), smalabels)))
+varIdx.by.block <- list()
+for (k in 1:length(block.names)){
+  this_block_vars <- var_blocks[var_blocks$block == block.names[k], "variable"]
+  this_block_idx <- which(is.element(colnames(Y_norm_bound), this_block_vars))
+  varIdx.by.block[[k]] <- this_block_idx
+}
 
 block.length <- unlist(lapply(varIdx.by.block, length))
 n.blocks <- length(block.length)
@@ -100,7 +88,7 @@ block4vars <-unlist(
     rep(block.names[x], block.length[x])
   }))
 
-allvarlabs <- c(cbclabels, coglabels, soclabels, smalabels)
+allvarlabs <- var_blocks$variable
 
 save(block.names, file = paste0(folder, "/block.names.rda"))
 save(varIdx.by.block, file = paste0(folder, "/varIdx.by.block.rda"))
