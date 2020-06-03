@@ -1,15 +1,14 @@
 #!/bin/bash
 #
-#SBATCH --partition=c2_cpu
-#SBATCH --ntasks=1
-#SBATCH --mem=20000
-#SBATCH --nodes=1
+#SBATCH --partition=c2_short
+#SBATCH --ntasks=10
+#SBATCH --mem=30000
 #SBATCH --output=/media/t1000/Analysis/kforthman/ABCD_GFA/out.log
 #SBATCH --error=/media/t1000/Analysis/kforthman/ABCD_GFA/err.log
 #SBATCH --job-name=GFA
 #SBATCH --mail-type=NONE
 #SBATCH --workdir=/media/t1000/Analysis/kforthman/ABCD_GFA
-#SBATCH --time=3-0
+#SBATCH --time=0-8
 #
 #################################################
 #to submit this to the scheduler, run:

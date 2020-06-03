@@ -129,7 +129,7 @@ overwrite_match <- F
 R <- 10
 
 # Writes output from gfa function to a .rda file.
-for(r in 1:R){
+foreach (r = 1:R) %dopar% {
   this.filename <- paste0(data_dir, "/GFA_rep_", r, ".rda")
   if(!file.exists(this.filename) | overwrite_rep){
     message(paste0("Creating replicate ", r, " of ", R))
@@ -185,10 +185,10 @@ if(!file.exists(xw_by_rep_comp.filename) | overwrite_xw){
   message("\nCreating xw_by_rep_comp.")
   xw <- list()
   for(r in 1:R){
-    xw[[r]] <- gfaList_p50[[r]]$Yhat.p50
-    names(xw[[r]]) <- paste0("K", 1:length(xw[[r]]))
+    message(paste(c("Loading|", rep("-", r), rep(" ", R-r), "|"), collapse = ""))
+    load(paste0(data_dir, "/GFA_rep_", r, ".rda"))
+    xw[[r]] <- pmXW_by_factor(res)
   }
-  names(xw) <- paste0("Rep", 1:R)
   
   save(xw, file = xw_by_rep_comp.filename)
   message("xw_by_rep_comp created.")
@@ -206,12 +206,26 @@ corGrids   <- c(seq(0.1, 0.5, by=0.2), seq(0.6, 0.9, 0.1))
 # in order to include it in the robust components.
 matchGrids <- c(seq(0.1, 0.5, by=0.2), seq(0.6, 0.9, 0.1))
 
+match.xw.filename <- paste0(folder, "/match.xw_pm.rda")
+if(!file.exists(match.xw.filename) | overwrite_xw){
+  message("\nCreating match.xw")
+  
+  match.xw <- match_dopar(comps=xw, corGrids, matchGrids)
+  
+  save(match.xw, file = match.xw.filename)
+  message("match.xw created.")
+}else{
+  message("\nLoading match.xw.")
+  load(match.xw.filename)
+  message("match.xw loaded.")
+}
+
 if(!file.exists(match.filename) || overwrite_match){
   # 3. Run MSE.Grids
   match.mse <- MSE.Grids(
     Ymtx=Y_norm_bound,            ## the observed (normalized) data matrix (N x D)
-    maxK = max(rep.summ$K),       ## the maximal K among the GFA replicates
     comps=xw,                     ## a list of GFA replicates with posterior medians
+    match.res = match.xw,         ## use the matching results from match_dopar()
     corGrids=corGrids,            ## the grids of corThr values to be assessed
     matchGrids=matchGrids)        ## the grids of matchThr values to be assessed
   save(match.mse, file = match.filename)
@@ -246,7 +260,7 @@ save(optParams, file = optParams.filename)
 varexp.filename <- paste0(folder, "/varexp.rda")
 message(varexp.filename)
 
-rob.ind <- list(indices=match.mse$indices[[opt.cor.idx]][[opt.match.idx]])
+rob.ind <- list(indices=match.xw$corThr_0.1$matchThr_0.5$indices) 
 varexp <- rob.var.exp(models=gfaList_p50,
                       indices=rob.ind,
                       block.names=block.names,
